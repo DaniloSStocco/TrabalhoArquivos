@@ -1,9 +1,19 @@
 #include "registro.h"
+#include <string.h>
+
+typedef struct busca_par
+{
+    char NomeCampo[20];
+    char ValorCampo[20];
+} BuscaPar;
 
 //saves e loads
 int lerRegistro(Registro *reg, FILE *arquivoBin)
 {
     if(!fread(reg->removido, sizeof(char), 1, arquivoBin)){
+        return 0;
+    }
+    if(reg->removido == 0){
         return 0;
     }
     fread(reg->tamanhoPilha, sizeof(int), 1, arquivoBin);
@@ -59,20 +69,92 @@ void imprimirRegistro(Registro reg){
     }
 }
 
-FUNC1(){
-    printf("PORMO GAY \n VOCÊ EST   ")
+void acaoBusca(int opcao, Registro *reg){
+    switch (opcao)
+        {
+            case 3: //busca
+                imprimirRegistro(*reg);
+                break;
+            
+            default:
+                break;
+        }
 }
 
-FUNC2(char *arquivoBin){
-    Cabecalho cab;
-    lerCabecalho(&cab, arquivoBin);
+void buscaRegistro(FILE *arquivoBin, int opcao){
 
-    Registro reg;
-    while(lerRegistro(&reg, arquivoBin)){
-        imprimirRegistro(reg);
+    int n; //numero de buscas que ocorrera
+    scanf("%d", &n);
+    for(int i=0; i<n; i++){
+        int m; //quantidade de pares para filtrar
+        scanf("%d", &m);
+
+        BuscaPar par[m];
+        Registro reg;
+
+        for(int j=0; j<m; j++){
+            scanf("%s %s", par[j].NomeCampo, par[j].ValorCampo);
+        }
+
+        while(lerRegistro(&reg, arquivoBin)){
+            int controle = 0; //se 0 não bate, se 1 bate
+            for(int j=0; j<m; j++){ //verifica se bate com cada par
+                if( //se qualquer filtro encaixar
+                    strcmp(par[j].NomeCampo, "idPoPs")==0 && (atoi(par[j].ValorCampo) == reg.idPoPs) ||
+                    strcmp(par[j].NomeCampo, "idPopsConectado")==0 && (atoi(par[j].ValorCampo) == reg.idPoPsConectado) ||
+                    (strcmp(par[j].NomeCampo, "velocidade")==0 && ( (atoi(par[j].ValorCampo)==reg.velocidade) || (strcmp(par[j].ValorCampo, "NULO")==0 && reg.velocidade==-1)))
+                ){
+                    controle = 1;
+                }else{
+                    controle = 0; //todos os filtros devem bater
+                    break;
+                }
+
+                if(strcmp(par[j].NomeCampo, "unidadeMedida")==0){
+                    if(strcmp(par[j].ValorCampo, "NULO")==0){
+                        controle = 1;
+                    }
+                    else{
+                        ScanQuoteString(par[j].ValorCampo);
+                        if(par[j].ValorCampo == reg.unidadeMedida){
+                            controle = 1;
+                        }else{
+                            controle = 0; //todos os filtros devem bater
+                        break;
+                        }
+                    }
+                    
+                }
+            }
+            if(controle){
+                acaoBusca(opcao, &reg);
+            }
+        }
     }
 }
 
-FUNC3(){
+FUNC1(){
+    printf("PORMO GAY \n VOCÊ EST   ");
+}
 
+FUNC2(char *NomeArquivoBin){
+    FILE *arqBin = fopen(NomeArquivoBin, "rb");
+
+    Cabecalho cab;
+    lerCabecalho(&cab, arqBin);
+
+    Registro reg;
+    while(lerRegistro(&reg, arqBin)){
+        imprimirRegistro(reg);
+    }
+
+    fclose(arqBin);
+}
+
+FUNC3(char *NomeArquivoBin){
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    buscaRegistro(arqBin, 3);
+
+    fclose(arqBin);
 }
