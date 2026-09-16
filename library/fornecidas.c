@@ -79,3 +79,5 @@ void ScanQuoteString(char *str) {
         strcpy(str, "");
     }
 }
+
+
