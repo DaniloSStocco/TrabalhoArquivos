@@ -137,7 +137,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 }
 
 FUNC1(){
-    printf("PORMO GAY \n VOCÊ EST   ");
+    printf(" ");
 }
 
 FUNC2(char *NomeArquivoBin){
