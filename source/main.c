@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../library/fornecidas.c"
+#include <fornecidas.h>
 int main(){
     int escolha;
     scanf("%d", &escolha);
