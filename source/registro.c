@@ -13,9 +13,6 @@ int lerRegistro(Registro *reg, FILE *arquivoBin)
     if(!fread(reg->removido, sizeof(char), 1, arquivoBin)){
         return 0;
     }
-    if(reg->removido == 0){
-        return 0;
-    }
     fread(reg->tamanhoPilha, sizeof(int), 1, arquivoBin);
     fread(reg->idPoPs, sizeof(int), 1, arquivoBin);
     fread(reg->idPoPsConectado, sizeof(int), 1, arquivoBin);
@@ -69,13 +66,15 @@ void imprimirRegistro(Registro reg){
     }
 }
 
-void acaoBusca(int opcao, Registro *reg){
+void acaoBusca(int opcao, Registro *reg, FILE* arqBin){
     switch (opcao)
         {
-            case 3: //busca
+            case 3: //imprimir resultados da busca
                 imprimirRegistro(*reg);
                 break;
             
+            case 5:
+
             default:
                 break;
         }
@@ -88,7 +87,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
     for(int i=0; i<n; i++){
         int m; //quantidade de pares para filtrar
         scanf("%d", &m);
-
+/////////////////////////////////////////////////////////////////////////LER O CABECALHO/////////////////////////////////////////
         BuscaPar par[m];
         Registro reg;
 
@@ -97,6 +96,10 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         }
 
         while(lerRegistro(&reg, arquivoBin)){
+            if(reg.removido == 1){
+                continue;
+            }
+
             int controle = 0; //se 0 não bate, se 1 bate
             for(int j=0; j<m; j++){ //verifica se bate com cada par
                 if( //se qualquer filtro encaixar
@@ -127,7 +130,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 }
             }
             if(controle){
-                acaoBusca(opcao, &reg);
+                acaoBusca(opcao, &reg, arquivoBin);
             }
         }
     }
