@@ -23,6 +23,11 @@ typedef struct cabecalho
     int nroPares;
 } Cabecalho;
 
-
+//CREATE
+void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin);
+//SELECT
+void FUNC2(char *NomeArquivoBin);
+//SELECT WHERE
+void FUNC3(char *NomeArquivoBin);
 
 #endif

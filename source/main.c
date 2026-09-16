@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <fornecidas.h>
+#include "fornecidas.h"
+#include "registro.h"
 int main(){
     int escolha;
     scanf("%d", &escolha);
@@ -28,23 +29,23 @@ int main(){
             break;
 
         case 4: //Acesso por RRN: Printa um (ou zero) registro com determinado RRN
-            FUNC4(nomeArquivoEntrada);
+           // FUNC4(nomeArquivoEntrada);
             break;
 
         case 5: //DELETE: Remoção lógica de registros com abordagem dinâmica
-            FUNC5(nomeArquivoEntrada);
+       //     //FUNC5(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;
 
         case 6: //INSERT INTO: inserção de n registros com abordagem dinâmica
-            FUNC6(nomeArquivoEntrada);
+         //   FUNC6(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;
 
         case 7: //UPDATE: ao invés de inserir, substitui os valores baseado em um filtro
-            FUNC7(nomeArquivoEntrada);
+           // FUNC7(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;
