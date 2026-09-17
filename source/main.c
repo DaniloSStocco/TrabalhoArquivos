@@ -45,7 +45,7 @@ int main(){
             break;
 
         case 7: //UPDATE: ao invés de inserir, substitui os valores baseado em um filtro
-           // FUNC7(nomeArquivoEntrada);
+            FUNC7(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;

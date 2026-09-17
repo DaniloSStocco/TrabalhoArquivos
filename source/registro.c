@@ -110,6 +110,12 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     return;
 }
 
+void atualizarRegistro(Registro *reg, FILE *arqBin){
+    voltaUmRegistro(arqBin);
+
+    escreverRegistro(reg, arqBin);
+}
+
 void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
     switch (opcao)
         {
@@ -121,6 +127,9 @@ void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
                 excluirRegistro(reg, cab, arqBin);
                 break;
 
+            case 7:
+                atualizarRegistro(reg, arqBin);
+                break;
             default:
                 break;
         }
@@ -138,6 +147,13 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         Cabecalho cab;
         lerCabecalho(&cab, arquivoBin);
 
+        
+        int p=1; //quantidade de pares de valores novos
+        if(opcao == 7){
+            scanf("%d", &p);
+        }
+            BuscaPar novoPar[p];
+           // Registro novoReg; ////////////////// <- update
         BuscaPar par[m];
         Registro reg;
         reg.RRN = -1; //começa -1 então o 1º é 0
@@ -150,7 +166,18 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 scanf("%s", par[j].ValorCampo);
             }
         }
-
+////////////////////////////update//////////////////////////////
+            if(opcao == 7){
+                for(int j=0; j<p; j++){
+                    scanf("%s", novoPar[j].NomeCampo);
+                    if(strcmp(novoPar[j].NomeCampo, "unidadeMedida")==0){
+                        ScanQuoteString(novoPar[j].ValorCampo);
+                    }else{
+                        scanf("%s", novoPar[j].ValorCampo);
+                    }
+                }
+            }
+////////////////////////////////////////////////////////////////
         while(lerRegistro(&reg, arquivoBin))
         {
             reg.RRN++;
@@ -206,6 +233,35 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                     }
                     
                 }
+//////////////////////////////////////////update/////////////////////////////////////////////
+                if(opcao == 7){
+                    for(int k=0; k<p; k++){
+                        if(strcmp(novoPar[k].NomeCampo, "idPoPs")==0){
+                            reg.idPoPs = atoi(novoPar[k].ValorCampo);
+                        }
+                        if(strcmp(novoPar[k].NomeCampo, "idPoPsConectado")==0){
+                            reg.idPoPsConectado = atoi(novoPar[k].ValorCampo);
+                        }
+                        if(strcmp(novoPar[k].NomeCampo, "velocidade")==0){
+                            if(strcmp(novoPar[k].ValorCampo, "NULO")==0){
+                                reg.velocidade = -1;
+                            }
+                            else{
+                                reg.velocidade = atoi(novoPar[k].ValorCampo);
+                            }
+                        }
+                        if(strcmp(novoPar[k].NomeCampo, "unidadeMedida")==0){
+                            if(strcmp(novoPar[k].ValorCampo, "NULO")==0){
+                                reg.unidadeMedida = '$';
+                            }
+                            else{
+                                reg.unidadeMedida = (novoPar[k].ValorCampo)[0];
+                            }
+                        }
+                        
+                    }
+                }
+//////////////////////////////////////////////////////////////////////////////////////////////
             }
             if(controle){
                 acaoBusca(opcao, &reg, &cab, arquivoBin);
@@ -378,6 +434,21 @@ void FUNC5(char *NomeArquivoBin)
     }
 
     buscaRegistro(arqBin, 5);
+
+    fclose(arqBin);
+}
+
+//UPDATE
+void FUNC7(char *NomeArquivoBin)
+{
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+
+    buscaRegistro(arqBin, 7);
 
     fclose(arqBin);
 }
