@@ -31,5 +31,7 @@ void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin);
 void FUNC2(char *NomeArquivoBin);
 //SELECT WHERE
 void FUNC3(char *NomeArquivoBin);
+//DELETE WHERE
+void FUNC5(char *NomeArquivoBin);
 
 #endif

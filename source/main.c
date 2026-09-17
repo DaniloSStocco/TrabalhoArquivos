@@ -33,7 +33,7 @@ int main(){
             break;
 
         case 5: //DELETE: Remoção lógica de registros com abordagem dinâmica
-       //     //FUNC5(nomeArquivoEntrada);
+            FUNC5(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;

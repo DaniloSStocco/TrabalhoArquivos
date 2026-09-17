@@ -35,7 +35,7 @@ void escreverRegistro(Registro *reg, FILE *arquivoBin)
     fwrite(&reg->unidadeMedida, sizeof(char), 1, arquivoBin);
 }
 
-
+//lê o arquivo, atribui ao cabeçalho
 void lerCabecalho(Cabecalho *cab, FILE *arquivoBin)
 {
     fread(&cab->status, sizeof(char), 1, arquivoBin);
@@ -45,13 +45,14 @@ void lerCabecalho(Cabecalho *cab, FILE *arquivoBin)
     fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
 }
 
+//lê o cabeçalho, atribui ao arquivo
 void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
 {
-    fread(&cab->status, sizeof(char), 1, arquivoBin);
-    fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
-    fread(&cab->proxRRN, sizeof(int), 1, arquivoBin);
-    fread(&cab->nroRegRem, sizeof(int), 1, arquivoBin);
-    fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
+    fwrite(&cab->status, sizeof(char), 1, arquivoBin);
+    fwrite(&cab->topoPilha, sizeof(int), 1, arquivoBin);
+    fwrite(&cab->proxRRN, sizeof(int), 1, arquivoBin);
+    fwrite(&cab->nroRegRem, sizeof(int), 1, arquivoBin);
+    fwrite(&cab->nroPares, sizeof(int), 1, arquivoBin);
 }
 
 void voltaUmRegistro(FILE *arquivoBin){
@@ -82,6 +83,7 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     fseek(arqBin, 0, SEEK_SET);
 
     //altero valores do cabecalho
+    int preTopo = cab->topoPilha;
     cab->topoPilha = reg->RRN;
     cab->nroRegRem += 1;
 
@@ -95,7 +97,7 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     //atributos de controle com valor
     reg->removido = '1';
     if (cab->topoPilha != -1) //de qualquer jeito ficaria -1 mas sla
-        reg->encadeamentoPilha = cab->topoPilha;
+        reg->encadeamentoPilha = preTopo;
 
     //resto com lixo
     reg->idPoPs = -1;
@@ -116,11 +118,8 @@ void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
                 break;
             
             case 5:
-                fseek(arqBin, 0, SEEK_CUR); 
-                
                 excluirRegistro(reg, cab, arqBin);
-                
-                
+                break;
 
             default:
                 break;
@@ -212,7 +211,9 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 acaoBusca(opcao, &reg, &cab, arquivoBin);
             }
         }
-        printf("\n");
+
+        if(opcao == 3) //runcodes :C
+            printf("\n");
     }
 }
 
@@ -261,6 +262,20 @@ void FUNC3(char *NomeArquivoBin){
     }
 
     buscaRegistro(arqBin, 3);
+
+    fclose(arqBin);
+}
+
+void FUNC5(char *NomeArquivoBin)
+{
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+
+    buscaRegistro(arqBin, 5);
 
     fclose(arqBin);
 }
