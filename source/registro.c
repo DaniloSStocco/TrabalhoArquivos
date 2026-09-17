@@ -394,3 +394,4 @@ void FUNC5(char *NomeArquivoBin)
 
     fclose(arqBin);
 }
+
