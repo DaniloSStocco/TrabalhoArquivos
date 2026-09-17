@@ -222,14 +222,28 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin){
     FILE *arqCsv = fopen(NomeArquivoEntrada, "r");
     
-    if((arqCsv == NULL)){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
     FILE *arqBin = fopen(NomeArquivoBin, "wb"); //somente escreve, cria arquivo
     
+    if((arqCsv == NULL)){
+        printf("Falha no processamento do arquivo.");
+
+        if(arqBin != NULL){
+            fclose(arqBin);
+        }
+        return;
+    }
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+
+        if(arqCsv != NULL){
+            fclose(arqCsv);
+        }
+        return;
+    }
+    
     Cabecalho cab;
-    cab.status = '1';
+    cab.status = '0';
     cab.topoPilha = -1;
     cab.proxRRN = 0;
     cab.nroRegRem = 0;
@@ -262,24 +276,27 @@ void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin){
 
         //unidadeMedida
         token = meu_strsep(&linha, ",");
-        reg.unidadeMedida = (meu_strsep(&linha, ","))[0];
+        reg.unidadeMedida = token[0];
 
         //removido
         reg.removido = '0';
 
         //encadeamentoPilha
-        reg.tamanhoPilha = -1;
-
+        reg.encadeamentoPilha = -1;
+    
         cab.proxRRN++;
         cab.nroPares++;
 
         escreverRegistro(&reg, arqBin);
     }
     fseek(arqBin, 0, SEEK_SET);
+    cab.status = '1';
     escreverCabecalho(&cab, arqBin);
 
     fclose(arqCsv);
     fclose(arqBin);
+
+    BinarioNaTela(NomeArquivoBin);
 }
 
 void FUNC2(char *NomeArquivoBin){
@@ -310,6 +327,42 @@ void FUNC3(char *NomeArquivoBin){
     }
 
     buscaRegistro(arqBin, 3);
+
+    fclose(arqBin);
+}
+
+//SELECT WHERE RRN
+void FUNC4(char *NomeArquivoBin){
+    FILE *arqBin = fopen(NomeArquivoBin, "rb");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+
+    Cabecalho cab;
+    lerCabecalho(&cab, arqBin);
+
+    int RRN;
+    scanf("%d", &RRN);
+
+    Registro reg;
+
+    fseek(arqBin, (RRN)*TAM_REG, SEEK_CUR);
+
+    lerRegistro(&reg, arqBin);
+
+    if(RRN > cab.nroPares){
+        printf("Registro inexistente.");
+        fclose(arqBin);
+        return;
+    }
+
+    if(reg.removido == '0'){
+        imprimirRegistro(reg);
+    }else{
+        printf("Registro inexistente.");
+    }
 
     fclose(arqBin);
 }

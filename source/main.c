@@ -17,7 +17,7 @@ int main(){
 
             FUNC1(nomeArquivoEntrada, nomeArquivoSaida);
 
-            BinarioNaTela(nomeArquivoSaida);
+            
             break;
 
         case 2: //SELECT FROM: Printa todos os registros de um arquivo.bin
@@ -29,7 +29,7 @@ int main(){
             break;
 
         case 4: //Acesso por RRN: Printa um (ou zero) registro com determinado RRN
-           // FUNC4(nomeArquivoEntrada);
+            FUNC4(nomeArquivoEntrada);
             break;
 
         case 5: //DELETE: Remoção lógica de registros com abordagem dinâmica
