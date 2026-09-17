@@ -7,7 +7,7 @@
 typedef struct registro
 {
     char removido;
-    int tamanhoPilha;
+    int encadeamentoPilha;
     int idPoPs;
     int idPoPsConectado;
     int velocidade;
