@@ -38,8 +38,8 @@ void lerCabecalho(Cabecalho *cab, FILE *arquivoBin)
     fread(&cab->status, sizeof(char), 1, arquivoBin);
     fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
     fread(&cab->proxRRN, sizeof(int), 1, arquivoBin);
-    fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
-    fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
+    fread(&cab->nroRegRem, sizeof(int), 1, arquivoBin);
+    fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
 }
 
 void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
@@ -47,22 +47,22 @@ void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
     fread(&cab->status, sizeof(char), 1, arquivoBin);
     fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
     fread(&cab->proxRRN, sizeof(int), 1, arquivoBin);
-    fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
-    fread(&cab->topoPilha, sizeof(int), 1, arquivoBin);
+    fread(&cab->nroRegRem, sizeof(int), 1, arquivoBin);
+    fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
 }
 
 void imprimirRegistro(Registro reg){
-    if(reg.removido == 0){
+    if(reg.removido == '0'){
         printf("%d %d ", reg.idPoPs, reg.idPoPsConectado); //Não podem ser nulos
         if(reg.velocidade == -1){
             printf("NULO ");
         }else{
-            printf("%d ", reg.idPoPs);
+            printf("%d ", reg.velocidade);
         }
         if(reg.unidadeMedida == -1){
             printf("NULO\n");
         }else{
-            printf("%c\n", reg.unidadeMedida);
+            printf("\"%c\"\n", reg.unidadeMedida);
         }
     }
 }
@@ -101,7 +101,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         }
 
         while(lerRegistro(&reg, arquivoBin)){
-            if(reg.removido == 1){
+            if(reg.removido == '1'){
                 continue;
             }
 
@@ -109,7 +109,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
             for(int j=0; j<m; j++){ //verifica se bate com cada par
                 if( //se qualquer filtro encaixar
                     ((strcmp(par[j].NomeCampo, "idPoPs")==0) && (atoi(par[j].ValorCampo) == reg.idPoPs)) ||
-                    ((strcmp(par[j].NomeCampo, "idPopsConectado")==0) && (atoi(par[j].ValorCampo) == reg.idPoPsConectado)) ||
+                    ((strcmp(par[j].NomeCampo, "idPoPsConectado")==0) && (atoi(par[j].ValorCampo) == reg.idPoPsConectado)) ||
                     ((strcmp(par[j].NomeCampo, "velocidade")==0) && ( (atoi(par[j].ValorCampo)==reg.velocidade) || (strcmp(par[j].ValorCampo, "NULO")==0 && reg.velocidade==-1)))
                 ){
                     controle = 1;
