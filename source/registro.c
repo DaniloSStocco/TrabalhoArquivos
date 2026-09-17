@@ -3,8 +3,8 @@
 #include "fornecidas.h"
 #include "sep.h"
 
-#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2))
-#define TAM_CAB ((sizeof(int)*4) + sizeof(char))
+#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2)) //18
+#define TAM_CAB ((sizeof(int)*4) + sizeof(char)) //17
 
 typedef struct busca_par
 {
@@ -18,7 +18,7 @@ int lerRegistro(Registro *reg, FILE *arquivoBin)
     if(!fread(&reg->removido, sizeof(char), 1, arquivoBin)){
         return 0;
     }
-    fread(&reg->tamanhoPilha, sizeof(int), 1, arquivoBin);
+    fread(&reg->encadeamentoPilha, sizeof(int), 1, arquivoBin);
     fread(&reg->idPoPs, sizeof(int), 1, arquivoBin);
     fread(&reg->idPoPsConectado, sizeof(int), 1, arquivoBin);
     fread(&reg->velocidade, sizeof(int), 1, arquivoBin);
@@ -29,14 +29,14 @@ int lerRegistro(Registro *reg, FILE *arquivoBin)
 void escreverRegistro(Registro *reg, FILE *arquivoBin)
 {
     fwrite(&reg->removido, sizeof(char), 1, arquivoBin);
-    fwrite(&reg->tamanhoPilha, sizeof(int), 1, arquivoBin);
+    fwrite(&reg->encadeamentoPilha, sizeof(int), 1, arquivoBin);
     fwrite(&reg->idPoPs, sizeof(int), 1, arquivoBin);
     fwrite(&reg->idPoPsConectado, sizeof(int), 1, arquivoBin);
     fwrite(&reg->velocidade, sizeof(int), 1, arquivoBin);
     fwrite(&reg->unidadeMedida, sizeof(char), 1, arquivoBin);
 }
 
-
+//lê o arquivo, atribui ao cabeçalho
 void lerCabecalho(Cabecalho *cab, FILE *arquivoBin)
 {
     fread(&cab->status, sizeof(char), 1, arquivoBin);
@@ -46,6 +46,7 @@ void lerCabecalho(Cabecalho *cab, FILE *arquivoBin)
     fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
 }
 
+//lê o cabeçalho, atribui ao arquivo
 void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
 {
     fwrite(&cab->status, sizeof(char), 1, arquivoBin);
@@ -60,48 +61,53 @@ void voltaUmRegistro(FILE *arquivoBin){
 }
 
 void imprimirRegistro(Registro reg){
-    if(reg.removido == '0'){
-        printf("%d %d ", reg.idPoPs, reg.idPoPsConectado); //Não podem ser nulos
-        if(reg.velocidade == -1){
-            printf("NULO ");
-        }else{
-            printf("%d ", reg.velocidade);
-        }
-        if(reg.unidadeMedida == -1){
-            printf("NULO\n");
-        }else{
-            printf("\"%c\"\n", reg.unidadeMedida);
-        }
+    //if(reg.removido == '0'){ //// acaoBusca já pula os removidos
+
+    printf("%d %d ", reg.idPoPs, reg.idPoPsConectado); //Não podem ser nulos
+    if(reg.velocidade == -1){
+        printf("NULO ");
+    }else{
+        printf("%d ", reg.velocidade);
     }
+    if(reg.unidadeMedida == -1){
+        printf("NULO\n");
+    }else{
+        printf("\"%c\"\n", reg.unidadeMedida);
+        }
+
+    //}
 }
 
 void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 {
+    //volta pro começo do arquivo
+    fseek(arqBin, 0, SEEK_SET);
+
+    //altero valores do cabecalho
+    int preTopo = cab->topoPilha;
+    cab->topoPilha = reg->RRN;
+    cab->nroRegRem += 1;
+
+    escreverCabecalho(cab, arqBin);
+
+    //vou até o registro q está sendo excluido
+    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
+
+    // [removido] [encadeamentoPilha] [idPoP](int) [idPoPsConectado](int) [velocidade](int) [unidadeMedida](char)
+
+    //atributos de controle com valor
+    reg->removido = '1';
+    reg->encadeamentoPilha = preTopo; //eu podia colocar um if mas fica -1 anyway
+
+    //resto com lixo
+    reg->idPoPs = -1;
+    reg->idPoPsConectado = -1;
+    reg->velocidade = -1;
+    reg->unidadeMedida = '$';
+
+    escreverRegistro(reg, arqBin); //termina onde estava no acaoBusca
     
-    //escrever RRN no topo pilha
-    fseek(arqBin, 1, SEEK_SET);
-    fwrite(&reg->RRN, sizeof(int), 1, arqBin);
-
-    //pula proxRRN (que é o final do último registro)
-    fseek(arqBin, sizeof(int), SEEK_CUR); 
-
-    //incrementa número de removidos
-    fwrite(&cab->nroRegRem + 1, sizeof(int), 1, arqBin); 
-
-    //vai até o registro em si
-    fseek(arqBin, (17 + (reg->RRN * 18)), SEEK_SET); //18 seria o tamanho
-    // isso é hard coding?
-
-    fwrite(1, sizeof(int), 1, arqBin); //removido = 1
-
-    fseek(arqBin, 17, SEEK_CUR); //vai até encadeamentoPilha
-
-    //escreve o RRN 
-    fwrite(&reg->RRN, sizeof(int), 1, arqBin);
-
-    //se topoPilha != 1, encadeamentoPilha = topoPilha
-
-    
+    return;
 }
 
 void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
@@ -112,11 +118,8 @@ void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
                 break;
             
             case 5:
-                fseek(arqBin, 0, SEEK_CUR); 
-                
                 excluirRegistro(reg, cab, arqBin);
-                
-                
+                break;
 
             default:
                 break;
@@ -137,7 +140,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 
         BuscaPar par[m];
         Registro reg;
-        reg.RRN = 0;
+        reg.RRN = -1; //começa -1 então o 1º é 0
 
         for(int j=0; j<m; j++){
             scanf("%s", par[j].NomeCampo);
@@ -208,7 +211,9 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 acaoBusca(opcao, &reg, &cab, arquivoBin);
             }
         }
-        printf("\n");
+
+        if(opcao == 3) //runcodes :C
+            printf("\n");
     }
 }
 
@@ -305,6 +310,21 @@ void FUNC3(char *NomeArquivoBin){
     }
 
     buscaRegistro(arqBin, 3);
+
+    fclose(arqBin);
+}
+
+//DELETE
+void FUNC5(char *NomeArquivoBin)
+{
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+
+    buscaRegistro(arqBin, 5);
 
     fclose(arqBin);
 }
