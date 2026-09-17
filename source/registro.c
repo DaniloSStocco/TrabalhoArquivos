@@ -67,7 +67,35 @@ void imprimirRegistro(Registro reg){
     }
 }
 
-void acaoBusca(int opcao, Registro *reg, FILE* arqBin){
+void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
+{
+    //escrever RRN no topo pilha
+    fseek(arqBin, 1, SEEK_SET);
+    fwrite(&reg->RRN, sizeof(int), 1, arqBin);
+
+    //pula proxRRN (que é o final do último registro)
+    fseek(arqBin, sizeof(int), SEEK_CUR); 
+
+    //incrementa número de removidos
+    fwrite(&cab->nroRegRem + 1, sizeof(int), 1, arqBin); 
+
+    //vai até o registro em si
+    fseek(arqBin, (17 + (reg->RRN * 18)), SEEK_SET); //18 seria o tamanho
+    // isso é hard coding?
+
+    fwrite(1, sizeof(int), 1, arqBin); //removido = 1
+
+    fseek(arqBin, 17, SEEK_CUR); //vai até encadeamentoPilha
+
+    //escreve o RRN 
+    fwrite(&reg->RRN, sizeof(int), 1, arqBin);
+
+    //se topoPilha != 1, encadeamentoPilha = topoPilha
+
+    
+}
+
+void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
     switch (opcao)
         {
             case 3: //imprimir resultados da busca
@@ -75,7 +103,12 @@ void acaoBusca(int opcao, Registro *reg, FILE* arqBin){
                 break;
             
             case 5:
-                fseek(arqBin, 0, SEEK_CUR);
+                fseek(arqBin, 0, SEEK_CUR); 
+                
+                excluirRegistro(reg, cab, arqBin);
+                
+                
+
             default:
                 break;
         }
@@ -95,6 +128,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 
         BuscaPar par[m];
         Registro reg;
+        reg.RRN = 0;
 
         for(int j=0; j<m; j++){
             scanf("%s", par[j].NomeCampo);
@@ -105,8 +139,12 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
             }
         }
 
-        while(lerRegistro(&reg, arquivoBin)){
-            if(reg.removido == '1'){
+        while(lerRegistro(&reg, arquivoBin))
+        {
+            reg.RRN++;
+
+            if(reg.removido == 1)
+            {
                 continue;
             }
 
@@ -158,12 +196,14 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 }
             }
             if(controle){
-                acaoBusca(opcao, &reg, arquivoBin);
+                acaoBusca(opcao, &reg, &cab, arquivoBin);
             }
         }
         printf("\n");
     }
 }
+
+
 
 void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin){
     FILE *arqCsv = fopen(NomeArquivoEntrada, "r");

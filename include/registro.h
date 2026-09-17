@@ -12,6 +12,8 @@ typedef struct registro
     int idPoPsConectado;
     int velocidade;
     char unidadeMedida;
+
+    int RRN; //endereço do reg no arquivo (tamCabeçalho + (RRN * tamRegistro) = endereço)
 } Registro;
 
 typedef struct cabecalho
