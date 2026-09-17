@@ -2,8 +2,8 @@
 #include "registro.h"
 #include "fornecidas.h"
 
-#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2))
-#define TAM_CAB ((sizeof(int)*4) + sizeof(char))
+#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2)) //18
+#define TAM_CAB ((sizeof(int)*4) + sizeof(char)) //17
 
 typedef struct busca_par
 {
@@ -96,8 +96,7 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 
     //atributos de controle com valor
     reg->removido = '1';
-    if (cab->topoPilha != -1) //de qualquer jeito ficaria -1 mas sla
-        reg->encadeamentoPilha = preTopo;
+    reg->encadeamentoPilha = preTopo; //eu podia colocar um if mas fica -1 anyway
 
     //resto com lixo
     reg->idPoPs = -1;
@@ -140,7 +139,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 
         BuscaPar par[m];
         Registro reg;
-        reg.RRN = -1;
+        reg.RRN = -1; //começa -1 então o 1º é 0
 
         for(int j=0; j<m; j++){
             scanf("%s", par[j].NomeCampo);
@@ -266,6 +265,7 @@ void FUNC3(char *NomeArquivoBin){
     fclose(arqBin);
 }
 
+//DELETE
 void FUNC5(char *NomeArquivoBin)
 {
     FILE *arqBin = fopen(NomeArquivoBin, "rb+");
