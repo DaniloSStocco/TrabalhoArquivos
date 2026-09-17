@@ -12,13 +12,13 @@ int main(){
     switch (escolha)
     {
         case 1: //CREATE TABLE: Cria um arquivo.bin (a "TABLE") baseado em um arquivo.csv
-            char nomeArquivoSaida[30];
+            {char nomeArquivoSaida[30];
             scanf("%s", nomeArquivoSaida);
 
             FUNC1(nomeArquivoEntrada, nomeArquivoSaida);
 
             
-            break;
+            break;}
 
         case 2: //SELECT FROM: Printa todos os registros de um arquivo.bin
             FUNC2(nomeArquivoEntrada);

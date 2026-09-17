@@ -80,32 +80,45 @@ void imprimirRegistro(Registro reg){
 
 void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 {
-    //volta pro começo do arquivo
-    fseek(arqBin, 0, SEEK_SET);
-
     //altero valores do cabecalho
-    int preTopo = cab->topoPilha;
+    cab->status = '0';
+    int preTopoPilha = cab->topoPilha;
     cab->topoPilha = reg->RRN;
     cab->nroRegRem += 1;
 
+    //volta pro começo do arquivo
+    fseek(arqBin, 0, SEEK_SET);
+
     escreverCabecalho(cab, arqBin);
 
-    //vou até o registro q está sendo excluido
-    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
-
     // [removido] [encadeamentoPilha] [idPoP](int) [idPoPsConectado](int) [velocidade](int) [unidadeMedida](char)
-
+    
     //atributos de controle com valor
     reg->removido = '1';
-    reg->encadeamentoPilha = preTopo; //eu podia colocar um if mas fica -1 anyway
-
+    reg->encadeamentoPilha = preTopoPilha; //eu podia colocar um if mas fica -1 anyway se for o 1º
+    
     //resto com lixo
     reg->idPoPs = -1;
     reg->idPoPsConectado = -1;
     reg->velocidade = -1;
     reg->unidadeMedida = '$';
+    
+    //vou até o registro q está sendo excluido
+    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
 
-    escreverRegistro(reg, arqBin); //termina onde estava no acaoBusca
+    escreverRegistro(reg, arqBin); 
+
+    fseek(arqBin, 0, SEEK_SET);
+    cab->status = '1';
+
+    // fwrite(cab->status, sizeof(char), 1, arqBin);
+    // fseek(arqBin, ((reg->RRN * TAM_REG)-1), SEEK_CUR);
+
+    //da dó de reescrever o cabecalho inteiro só pelo status, daria pra usar o código comentado acima como alternativa
+    escreverCabecalho(cab, arqBin); 
+    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
+    
+    //termina onde estava no acaoBusca
     
     return;
 }
