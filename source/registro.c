@@ -2,6 +2,9 @@
 #include "registro.h"
 #include "fornecidas.h"
 
+#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2))
+#define TAM_CAB ((sizeof(int)*4) + sizeof(char))
+
 typedef struct busca_par
 {
     char NomeCampo[20];
@@ -49,6 +52,10 @@ void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
     fread(&cab->proxRRN, sizeof(int), 1, arquivoBin);
     fread(&cab->nroRegRem, sizeof(int), 1, arquivoBin);
     fread(&cab->nroPares, sizeof(int), 1, arquivoBin);
+}
+
+void voltaUmRegistro(FILE *arquivoBin){
+    fseek(arquivoBin, (-TAM_REG), SEEK_CUR);
 }
 
 void imprimirRegistro(Registro reg){
