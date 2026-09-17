@@ -97,7 +97,12 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         Registro reg;
 
         for(int j=0; j<m; j++){
-            scanf("%s %s", par[j].NomeCampo, par[j].ValorCampo);
+            scanf("%s", par[j].NomeCampo);
+            if(strcmp(par[j].NomeCampo, "unidadeMedida")==0){
+                ScanQuoteString(par[j].ValorCampo);
+            }else{
+                scanf("%s", par[j].ValorCampo);
+            }
         }
 
         while(lerRegistro(&reg, arquivoBin)){
@@ -107,15 +112,34 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 
             int controle = 0; //se 0 não bate, se 1 bate
             for(int j=0; j<m; j++){ //verifica se bate com cada par
-                if( //se qualquer filtro encaixar
-                    ((strcmp(par[j].NomeCampo, "idPoPs")==0) && (atoi(par[j].ValorCampo) == reg.idPoPs)) ||
-                    ((strcmp(par[j].NomeCampo, "idPoPsConectado")==0) && (atoi(par[j].ValorCampo) == reg.idPoPsConectado)) ||
-                    ((strcmp(par[j].NomeCampo, "velocidade")==0) && ( (atoi(par[j].ValorCampo)==reg.velocidade) || (strcmp(par[j].ValorCampo, "NULO")==0 && reg.velocidade==-1)))
-                ){
-                    controle = 1;
-                }else{
-                    controle = 0; //todos os filtros devem bater
-                    break;
+
+                if((strcmp(par[j].NomeCampo, "idPoPs")==0)){
+                    if((atoi(par[j].ValorCampo) == reg.idPoPs)){
+                        controle = 1;
+                    }else{
+                        controle = 0;
+                        break;
+                    }
+                }
+
+                if((strcmp(par[j].NomeCampo, "idPoPsConectado")==0)){
+                    if((atoi(par[j].ValorCampo) == reg.idPoPsConectado)){
+                        controle = 1;
+                    }else{
+                        controle = 0;
+                        break;
+                    }
+                }
+
+                if((strcmp(par[j].NomeCampo, "velocidade")==0)){
+                    if((strcmp(par[j].ValorCampo, "NULO")==0) && (reg.velocidade==-1)){
+                        controle = 1;
+                    }else if((atoi(par[j].ValorCampo) == reg.velocidade) ){
+                        controle = 1;
+                    }else{
+                        controle = 0;
+                        break;
+                    }
                 }
 
                 if(strcmp(par[j].NomeCampo, "unidadeMedida")==0){
@@ -123,7 +147,6 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                         controle = 1;
                     }
                     else{
-                        ScanQuoteString(par[j].ValorCampo);
                         if((par[j].ValorCampo)[0] == reg.unidadeMedida){
                             controle = 1;
                         }else{
@@ -138,15 +161,32 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 acaoBusca(opcao, &reg, arquivoBin);
             }
         }
+        printf("\n");
     }
 }
 
 void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin){
-    printf("%s %s", NomeArquivoEntrada, NomeArquivoBin);
+    FILE *arqCsv = fopen(NomeArquivoEntrada, "r");
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if((arqCsv == NULL)){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+    
+    
+
+    fclose(arqCsv);
+    fclose(arqBin);
 }
 
 void FUNC2(char *NomeArquivoBin){
     FILE *arqBin = fopen(NomeArquivoBin, "rb");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
 
     Cabecalho cab;
     lerCabecalho(&cab, arqBin);
@@ -161,6 +201,11 @@ void FUNC2(char *NomeArquivoBin){
 
 void FUNC3(char *NomeArquivoBin){
     FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
 
     buscaRegistro(arqBin, 3);
 
