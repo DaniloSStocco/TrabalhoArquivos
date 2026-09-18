@@ -35,6 +35,8 @@ void FUNC3(char *NomeArquivoBin);
 void FUNC4(char *NomeArquivoBin);
 //DELETE WHERE
 void FUNC5(char *NomeArquivoBin);
+//INSERT INTO
+void FUNC6(char *NomeArquivoBin);
 //UPDATE WHERE
 void FUNC7(char *NomeArquivoBin);
 

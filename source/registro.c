@@ -462,58 +462,60 @@ void FUNC6(char *NomeArquivoBin)
         return;
     }
 
-    Cabecalho *cab;
+    Cabecalho cab;
     fseek(arqBin, 0, SEEK_SET);
-    lerCabecalho(cab, arqBin);
+    lerCabecalho(&cab, arqBin);
 
-    Registro *reg;
+    Registro reg;
 
     int n;
     scanf("%d", &n);
     for(int i=0; i<n; i++)
     {
-        //valores do registrador a ser adicionado
-        char *entrada;
-        reg->removido = 0;
-        reg->encadeamentoPilha = -1;
-        scanf("%d", reg->idPoPs);
-        scanf("%d", reg->idPoPsConectado);
-
-        // scanf("%d", reg->velocidade);
-        scanf("%s", entrada);
-        if (strcmp(entrada, "NULO") == 0)
-            reg->velocidade = -1;
-        else
-            reg->velocidade = atoi(entrada);
-
-        // scanf("%c", reg->unidadeMedida);
-        ScanQuoteString(entrada);
-        if(!entrada[0]) // se não houver o primeiro char
-            reg->unidadeMedida = '$';
-        else
-            reg->unidadeMedida = entrada;
-        
         //vejo o topoPilha
         //se não há removidos
-        if (cab->topoPilha == -1)
+        if (cab.topoPilha == -1)
         {
-            fseek(arqBin, (TAM_REG * cab->proxRRN), SEEK_CUR);
-            cab->proxRRN++;
+            fseek(arqBin, (TAM_REG * cab.proxRRN), SEEK_CUR);
+            cab.proxRRN++;
         }
         else //se houver
         {
-            fseek(arqBin, (TAM_REG * cab->topoPilha), SEEK_CUR);
-            lerRegistro(reg, arqBin);
-            cab->nroRegRem--;
-            cab->topoPilha = reg->encadeamentoPilha;
+            fseek(arqBin, (TAM_REG * cab.topoPilha), SEEK_CUR);
+            lerRegistro(&reg, arqBin);
+            cab.nroRegRem--;
+            cab.topoPilha = reg.encadeamentoPilha;
 
             voltaUmRegistro(arqBin);
         }
 
-        escreverRegistro(reg, arqBin);
+///////////////////// pegando valores de entrada
+        char entrada[30];
+        //valores do registrador a ser adicionado
+        reg.removido = '0';
+        reg.encadeamentoPilha = -1;
+        scanf("%d", &reg.idPoPs);
+        scanf("%d", &reg.idPoPsConectado);
+
+        // scanf("%d", reg->velocidade);
+        scanf("%s", entrada);
+        if (strcmp(entrada, "NULO") == 0)
+            reg.velocidade = -1;
+        else
+            reg.velocidade = atoi(entrada);
+
+        // scanf("%c", reg->unidadeMedida);
+        ScanQuoteString(entrada);
+        if(!entrada[0]) // se não houver o primeiro char
+            reg.unidadeMedida = '$';
+        else
+            reg.unidadeMedida = entrada[0];
+/////////////////////
+
+        escreverRegistro(&reg, arqBin);
 
         fseek(arqBin, 0, SEEK_SET);
-        escreverCabecalho(cab, arqBin);
+        escreverCabecalho(&cab, arqBin);
     }
 
     fclose(arqBin);
