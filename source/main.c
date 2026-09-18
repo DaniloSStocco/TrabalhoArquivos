@@ -39,7 +39,7 @@ int main(){
             break;
 
         case 6: //INSERT INTO: inserção de n registros com abordagem dinâmica
-         //   FUNC6(nomeArquivoEntrada);
+            FUNC6(nomeArquivoEntrada);
 
             BinarioNaTela(nomeArquivoEntrada);
             break;
