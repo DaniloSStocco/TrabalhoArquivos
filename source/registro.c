@@ -80,6 +80,8 @@ void imprimirRegistro(Registro reg){
 
 void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 {
+        printf("Registro que vai ser removido: ");
+        imprimirRegistro(*reg);
     //altero valores do cabecalho
     cab->status = '0';
     int preTopoPilha = cab->topoPilha;
@@ -99,9 +101,9 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     reg->encadeamentoPilha = preTopoPilha; //eu podia colocar um if mas fica -1 anyway se for o 1º
     
     //resto com lixo
-    reg->idPoPs = 0x24242424; //$$$$ para inteiros
-    reg->idPoPsConectado = 0x24242424;
-    reg->velocidade = 0x24242424;
+    memset(&reg->idPoPs, '$', sizeof(int));
+    memset(&reg->idPoPsConectado, '$', sizeof(int));
+    memset(&reg->velocidade, '$', sizeof(int));
     reg->unidadeMedida = '$';
     
     //vou até o registro q está sendo excluido
@@ -206,6 +208,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         {
             //imprimirRegistro(reg);
             reg.RRN++;
+            printf("\nRRN = %d", reg.RRN);
 
             if(reg.removido == '1')
             {
@@ -399,7 +402,9 @@ void FUNC2(char *NomeArquivoBin){
 
     Registro reg;
     while(lerRegistro(&reg, arqBin)){
-        imprimirRegistro(reg);
+        if(reg.removido != '1'){
+            imprimirRegistro(reg);
+        }
     }
 
     fclose(arqBin);
@@ -528,10 +533,12 @@ void FUNC6(char *NomeArquivoBin)
         else
             reg.unidadeMedida = entrada[0];
 /////////////////////
-
+            printf("Registro adicionado: (de RRN = %d)", reg.RRN);
+            imprimirRegistro(reg);
         escreverRegistro(&reg, arqBin);
 
         fseek(arqBin, 0, SEEK_SET);
+        cab.nroPares++;
         escreverCabecalho(&cab, arqBin);
     }
 
