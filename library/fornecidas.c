@@ -61,7 +61,7 @@ void ScanQuoteString(char *str) {
     while ((R = getchar()) != EOF && isspace(R))
         ; // ignorar espaços, \r, \n...
 
-    if (R == 'N' || R == 'n') { // campo NULO
+    if (R == 'N' || R == 'n') { // campo NULO 
         getchar();
         getchar();
         getchar();       // ignorar o "ULO" de NULO.
@@ -71,11 +71,21 @@ void ScanQuoteString(char *str) {
             strcpy(str, "");
         }
         getchar();         // ignorar aspas fechando
-    } else if (R != EOF) { // vc tá tentando ler uma string que não tá entre
-                           // aspas! Fazer leitura normal %s então, pois deve
-                           // ser algum inteiro ou algo assim...
-        str[0] = R;
-        scanf("%s", &str[1]);
+    } else if (R != EOF) { // leitura normal, caractere por caractere,
+                           // parando em espaço/quebra de linha/EOF
+        int i = 0;
+        str[i++] = R;
+
+        int proximo = getchar();
+        while (proximo != EOF && !isspace(proximo)) {
+            str[i++] = proximo;
+            proximo = getchar();
+        }
+        str[i] = '\0';
+
+        if (proximo != EOF) {
+            ungetc(proximo, stdin); // devolve o espaço/quebra de linha pro buffer
+        }
     } else { // EOF
         strcpy(str, "");
     }

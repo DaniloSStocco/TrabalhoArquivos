@@ -69,7 +69,7 @@ void imprimirRegistro(Registro reg){
     }else{
         printf("%d ", reg.velocidade);
     }
-    if(reg.unidadeMedida == -1){
+    if(reg.unidadeMedida == '$'){
         printf("NULO\n");
     }else{
         printf("\"%c\"\n", reg.unidadeMedida);
@@ -125,7 +125,8 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 
 void atualizarRegistro(Registro *reg, FILE *arqBin){
     voltaUmRegistro(arqBin);
-
+    //printf("\nRegistro atualizado: \n");
+    //imprimirRegistro(*reg);
     escreverRegistro(reg, arqBin);
 }
 
@@ -159,18 +160,15 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
 
         Cabecalho cab;
         lerCabecalho(&cab, arquivoBin);
-
         
         int p=1; //quantidade de pares de valores novos
-        if(opcao == 7){
-            scanf("%d", &p);
-        }
-            BuscaPar novoPar[p];
-           // Registro novoReg; ////////////////// <- update
+        
+        
+        // Registro novoReg; ////////////////// <- update
         BuscaPar par[m];
         Registro reg;
         reg.RRN = -1; //começa -1 então o 1º é 0
-
+        
         for(int j=0; j<m; j++){
             scanf("%s", par[j].NomeCampo);
             if(strcmp(par[j].NomeCampo, "unidadeMedida")==0){
@@ -179,23 +177,36 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 scanf("%s", par[j].ValorCampo);
             }
         }
+        
 ////////////////////////////update//////////////////////////////
-            if(opcao == 7){
-                for(int j=0; j<p; j++){
-                    scanf("%s", novoPar[j].NomeCampo);
-                    if(strcmp(novoPar[j].NomeCampo, "unidadeMedida")==0){
-                        ScanQuoteString(novoPar[j].ValorCampo);
-                    }else{
-                        scanf("%s", novoPar[j].ValorCampo);
+        if(opcao == 7){
+            //printf("\nLeitura de p:\n");
+            scanf("%d", &p);
+        }
+        BuscaPar novoPar[p];
+            
+        if(opcao == 7){
+            for(int j=0; j<p; j++){
+                //printf("\nLeitura do nome do campo a ser atualizado: ");
+                scanf("%s", novoPar[j].NomeCampo);
+                //printf("\nLeitura do valor do campo a ser atualizado: ");
+                if(strcmp(novoPar[j].NomeCampo, "unidadeMedida")==0){
+                    ScanQuoteString(novoPar[j].ValorCampo);
+                    if(!(novoPar[j].ValorCampo)[0]){
+                        strcpy(novoPar[j].ValorCampo, "NULO");
                     }
+                }else{
+                    scanf("%s", novoPar[j].ValorCampo);
                 }
             }
+        }
 ////////////////////////////////////////////////////////////////
         while(lerRegistro(&reg, arquivoBin))
         {
+            //imprimirRegistro(reg);
             reg.RRN++;
 
-            if(reg.removido == 1)
+            if(reg.removido == '1')
             {
                 continue;
             }
@@ -233,7 +244,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                 }
 
                 if(strcmp(par[j].NomeCampo, "unidadeMedida")==0){
-                    if((strcmp(par[j].ValorCampo, "NULO")==0) && (reg.unidadeMedida == -1)){
+                    if((strcmp(par[j].ValorCampo, "NULO")==0) && (reg.unidadeMedida == '$')){
                         controle = 1;
                     }
                     else{
@@ -246,9 +257,15 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                     }
                     
                 }
+
+            }
+            //printf("\nCONTROLE = %d\n", controle);
+            if(controle){
 //////////////////////////////////////////update/////////////////////////////////////////////
                 if(opcao == 7){
                     for(int k=0; k<p; k++){
+                        //printf("\nloop %d\n", k);
+                        //printf("\nCampo a ser atualizado: %s Para o valor %s", novoPar[k].NomeCampo, novoPar[k].ValorCampo);
                         if(strcmp(novoPar[k].NomeCampo, "idPoPs")==0){
                             reg.idPoPs = atoi(novoPar[k].ValorCampo);
                         }
@@ -265,6 +282,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                         }
                         if(strcmp(novoPar[k].NomeCampo, "unidadeMedida")==0){
                             if(strcmp(novoPar[k].ValorCampo, "NULO")==0){
+                                //printf("\n------------ELE TA TENTANDO"); //nao chegou
                                 reg.unidadeMedida = '$';
                             }
                             else{
@@ -275,8 +293,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
                     }
                 }
 //////////////////////////////////////////////////////////////////////////////////////////////
-            }
-            if(controle){
+                //printf("\nAcao na busca!!");
                 acaoBusca(opcao, &reg, &cab, arquivoBin);
             }
         }
