@@ -85,6 +85,7 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     int preTopoPilha = cab->topoPilha;
     cab->topoPilha = reg->RRN;
     cab->nroRegRem += 1;
+    //cab->nroPares -= 1;
 
     //volta pro começo do arquivo
     fseek(arqBin, 0, SEEK_SET);
@@ -98,9 +99,9 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     reg->encadeamentoPilha = preTopoPilha; //eu podia colocar um if mas fica -1 anyway se for o 1º
     
     //resto com lixo
-    reg->idPoPs = -1;
-    reg->idPoPsConectado = -1;
-    reg->velocidade = -1;
+    reg->idPoPs = 0x24242424; //$$$$ para inteiros
+    reg->idPoPsConectado = 0x24242424;
+    reg->velocidade = 0x24242424;
     reg->unidadeMedida = '$';
     
     //vou até o registro q está sendo excluido
@@ -112,11 +113,11 @@ void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
     cab->status = '1';
 
     // fwrite(cab->status, sizeof(char), 1, arqBin);
-    // fseek(arqBin, ((reg->RRN * TAM_REG)-1), SEEK_CUR);
+    // fseek(arqBin, (((reg->RRN + 1) * TAM_REG)-1), SEEK_CUR);
 
     //da dó de reescrever o cabecalho inteiro só pelo status, daria pra usar o código comentado acima como alternativa
     escreverCabecalho(cab, arqBin); 
-    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
+    fseek(arqBin, ((reg->RRN + 1) * TAM_REG), SEEK_CUR);
     
     //termina onde estava no acaoBusca
     
@@ -447,6 +448,73 @@ void FUNC5(char *NomeArquivoBin)
     }
 
     buscaRegistro(arqBin, 5);
+
+    fclose(arqBin);
+}
+
+//INSERT
+void FUNC6(char *NomeArquivoBin)
+{
+    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+
+    if(arqBin == NULL){
+        printf("Falha no processamento do arquivo.");
+        return;
+    }
+
+    Cabecalho *cab;
+    fseek(arqBin, 0, SEEK_SET);
+    lerCabecalho(cab, arqBin);
+
+    Registro *reg;
+
+    int n;
+    scanf("%d", &n);
+    for(int i=0; i<n; i++)
+    {
+        //valores do registrador a ser adicionado
+        char *entrada;
+        reg->removido = 0;
+        reg->encadeamentoPilha = -1;
+        scanf("%d", reg->idPoPs);
+        scanf("%d", reg->idPoPsConectado);
+
+        // scanf("%d", reg->velocidade);
+        scanf("%s", entrada);
+        if (strcmp(entrada, "NULO") == 0)
+            reg->velocidade = -1;
+        else
+            reg->velocidade = atoi(entrada);
+
+        // scanf("%c", reg->unidadeMedida);
+        ScanQuoteString(entrada);
+        if(!entrada[0]) // se não houver o primeiro char
+            reg->unidadeMedida = '$';
+        else
+            reg->unidadeMedida = entrada;
+        
+        //vejo o topoPilha
+        //se não há removidos
+        if (cab->topoPilha == -1)
+        {
+            fseek(arqBin, (TAM_REG * cab->proxRRN), SEEK_CUR);
+            cab->proxRRN++;
+        }
+        else //se houver
+        {
+            fseek(arqBin, (TAM_REG * cab->topoPilha), SEEK_CUR);
+            lerRegistro(reg, arqBin);
+            cab->nroRegRem--;
+            cab->topoPilha = reg->encadeamentoPilha;
+
+            voltaUmRegistro(arqBin);
+        }
+
+        escreverRegistro(reg, arqBin);
+
+        fseek(arqBin, 0, SEEK_SET);
+        escreverCabecalho(cab, arqBin);
+    }
 
     fclose(arqBin);
 }
