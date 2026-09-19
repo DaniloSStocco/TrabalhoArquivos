@@ -1,3 +1,6 @@
+// Danilo Salmen Stocco - nºUSP 16861501
+// Diogo Salmen Stocco - nºUSP 16906441
+
 #ifndef FUNCS_H
 #define FUNCS_H
 
