@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "fornecidas.h"
 #include "registro.h"
+#include "FUNCs.h"
+
 int main(){
     int escolha;
     scanf("%d", &escolha);

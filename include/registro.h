@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2)) //18
+#define TAM_CAB ((sizeof(int)*4) + sizeof(char)) //17
+
+
 typedef struct registro
 {
     char removido;
@@ -25,19 +29,19 @@ typedef struct cabecalho
     int nroPares;
 } Cabecalho;
 
-//CREATE
-void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin);
-//SELECT
-void FUNC2(char *NomeArquivoBin);
-//SELECT WHERE
-void FUNC3(char *NomeArquivoBin);
-//SELECT WHERE RRN
-void FUNC4(char *NomeArquivoBin);
-//DELETE WHERE
-void FUNC5(char *NomeArquivoBin);
-//INSERT INTO
-void FUNC6(char *NomeArquivoBin);
-//UPDATE WHERE
-void FUNC7(char *NomeArquivoBin);
+//lê o arquivo, atribui ao registro
+int lerRegistro(Registro *reg, FILE *arquivoBin);
+//lê o registro, atribui ao arquivo
+void escreverRegistro(Registro *reg, FILE *arquivoBin);
+//lê o arquivo, atribui ao cabeçalho
+void lerCabecalho(Cabecalho *cab, FILE *arquivoBin);
+//lê o cabeçalho, atribui ao arquivo
+void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin);
+void voltaUmRegistro(FILE *arquivoBin);
+void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin);
+void buscaRegistro(FILE *arquivoBin, int opcao);
+void imprimirRegistro(Registro reg);
+void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin);
+void atualizarRegistro(Registro *reg, FILE *arqBin);
 
 #endif

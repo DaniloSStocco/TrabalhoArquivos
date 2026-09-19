@@ -2,17 +2,9 @@
 #include "registro.h"
 #include "fornecidas.h"
 #include "sep.h"
+#include "FUNCs.h"
 
-#define TAM_REG ((sizeof(int)*4) + (sizeof(char)*2)) //18
-#define TAM_CAB ((sizeof(int)*4) + sizeof(char)) //17
-
-typedef struct busca_par
-{
-    char NomeCampo[20];
-    char ValorCampo[20];
-} BuscaPar;
-
-//saves e loads
+//lê o arquivo, atribui ao registro
 int lerRegistro(Registro *reg, FILE *arquivoBin)
 {
     if(!fread(&reg->removido, sizeof(char), 1, arquivoBin)){
@@ -26,6 +18,7 @@ int lerRegistro(Registro *reg, FILE *arquivoBin)
     return 1;
 }
 
+//lê o registro, atribui ao arquivo
 void escreverRegistro(Registro *reg, FILE *arquivoBin)
 {
     fwrite(&reg->removido, sizeof(char), 1, arquivoBin);
@@ -58,79 +51,6 @@ void escreverCabecalho(Cabecalho *cab, FILE *arquivoBin)
 
 void voltaUmRegistro(FILE *arquivoBin){
     fseek(arquivoBin, (-TAM_REG), SEEK_CUR);
-}
-
-void imprimirRegistro(Registro reg){
-    //if(reg.removido == '0'){ //// acaoBusca já pula os removidos
-
-    printf("%d %d ", reg.idPoPs, reg.idPoPsConectado); //Não podem ser nulos
-    if(reg.velocidade == -1){
-        printf("NULO ");
-    }else{
-        printf("%d ", reg.velocidade);
-    }
-    if(reg.unidadeMedida == '$'){
-        printf("NULO\n");
-    }else{
-        printf("\"%c\"\n", reg.unidadeMedida);
-        }
-
-    //}
-}
-
-void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
-{
-        printf("Registro que vai ser removido: ");
-        imprimirRegistro(*reg);
-    //altero valores do cabecalho
-    cab->status = '0';
-    int preTopoPilha = cab->topoPilha;
-    cab->topoPilha = reg->RRN;
-    cab->nroRegRem += 1;
-    //cab->nroPares -= 1;
-
-    //volta pro começo do arquivo
-    fseek(arqBin, 0, SEEK_SET);
-
-    escreverCabecalho(cab, arqBin);
-
-    // [removido] [encadeamentoPilha] [idPoP](int) [idPoPsConectado](int) [velocidade](int) [unidadeMedida](char)
-    
-    //atributos de controle com valor
-    reg->removido = '1';
-    reg->encadeamentoPilha = preTopoPilha; //eu podia colocar um if mas fica -1 anyway se for o 1º
-    
-    //resto com lixo
-    memset(&reg->idPoPs, '$', sizeof(int));
-    memset(&reg->idPoPsConectado, '$', sizeof(int));
-    memset(&reg->velocidade, '$', sizeof(int));
-    reg->unidadeMedida = '$';
-    
-    //vou até o registro q está sendo excluido
-    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
-
-    escreverRegistro(reg, arqBin); 
-
-    fseek(arqBin, 0, SEEK_SET);
-    cab->status = '1';
-
-    // fwrite(cab->status, sizeof(char), 1, arqBin);
-    // fseek(arqBin, (((reg->RRN + 1) * TAM_REG)-1), SEEK_CUR);
-
-    //da dó de reescrever o cabecalho inteiro só pelo status, daria pra usar o código comentado acima como alternativa
-    escreverCabecalho(cab, arqBin); 
-    fseek(arqBin, ((reg->RRN + 1) * TAM_REG), SEEK_CUR);
-    
-    //termina onde estava no acaoBusca
-    
-    return;
-}
-
-void atualizarRegistro(Registro *reg, FILE *arqBin){
-    voltaUmRegistro(arqBin);
-    //printf("\nRegistro atualizado: \n");
-    //imprimirRegistro(*reg);
-    escreverRegistro(reg, arqBin);
 }
 
 void acaoBusca(int opcao, Registro *reg, Cabecalho *cab, FILE* arqBin){
@@ -208,7 +128,7 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
         {
             //imprimirRegistro(reg);
             reg.RRN++;
-            printf("\nRRN = %d", reg.RRN);
+            //printf("\nRRN = %d", reg.RRN);
 
             if(reg.removido == '1')
             {
@@ -307,255 +227,77 @@ void buscaRegistro(FILE *arquivoBin, int opcao){
     }
 }
 
+void imprimirRegistro(Registro reg){
+    //if(reg.removido == '0'){ //// acaoBusca já pula os removidos
 
-
-void FUNC1(char *NomeArquivoEntrada, char*NomeArquivoBin){
-    FILE *arqCsv = fopen(NomeArquivoEntrada, "r");
-    
-    FILE *arqBin = fopen(NomeArquivoBin, "wb"); //somente escreve, cria arquivo
-    
-    if((arqCsv == NULL)){
-        printf("Falha no processamento do arquivo.");
-
-        if(arqBin != NULL){
-            fclose(arqBin);
-        }
-        return;
-    }
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-
-        if(arqCsv != NULL){
-            fclose(arqCsv);
-        }
-        return;
-    }
-    
-    Cabecalho cab;
-    cab.status = '0';
-    cab.topoPilha = -1;
-    cab.proxRRN = 0;
-    cab.nroRegRem = 0;
-    cab.nroPares = 0;
-
-    escreverCabecalho(&cab, arqBin); //Ainda não está correto
-
-    char temp[200]; //buffer pra andar no csv com tamanho seguro pra 1 linha do csv
-    char *linha, *token; //token pro meu_strsep
-
-    fgets(temp, sizeof(temp), arqCsv); //pula a primeira linha
-
-    while(fgets(temp, sizeof(temp), arqCsv)){
-        linha = temp;
-        Registro reg;
-
-        temp[strcspn(temp, "\r\n")] = 0; //transforma em nulo (codigo 0) o caractere q pula linha
-
-        //idPoPs
-        token = meu_strsep(&linha, ","); //encontra o texto entre vírgulas (garantido no csv)
-        reg.idPoPs = atoi(token);
-
-        //idConectaPoPs
-        token = meu_strsep(&linha, ",");
-        reg.idPoPsConectado = atoi(token);
-
-        //velocidade
-        token = meu_strsep(&linha, ",");
-        reg.velocidade = atoi(token);
-
-        //unidadeMedida
-        token = meu_strsep(&linha, ",");
-        reg.unidadeMedida = token[0];
-
-        //removido
-        reg.removido = '0';
-
-        //encadeamentoPilha
-        reg.encadeamentoPilha = -1;
-    
-        cab.proxRRN++;
-        cab.nroPares++;
-
-        escreverRegistro(&reg, arqBin);
-    }
-    fseek(arqBin, 0, SEEK_SET);
-    cab.status = '1';
-    escreverCabecalho(&cab, arqBin);
-
-    fclose(arqCsv);
-    fclose(arqBin);
-
-    BinarioNaTela(NomeArquivoBin);
-}
-
-void FUNC2(char *NomeArquivoBin){
-    FILE *arqBin = fopen(NomeArquivoBin, "rb");
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    Cabecalho cab;
-    lerCabecalho(&cab, arqBin);
-
-    Registro reg;
-    while(lerRegistro(&reg, arqBin)){
-        if(reg.removido != '1'){
-            imprimirRegistro(reg);
-        }
-    }
-
-    fclose(arqBin);
-}
-
-void FUNC3(char *NomeArquivoBin){
-    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    buscaRegistro(arqBin, 3);
-
-    fclose(arqBin);
-}
-
-//SELECT WHERE RRN
-void FUNC4(char *NomeArquivoBin){
-    FILE *arqBin = fopen(NomeArquivoBin, "rb");
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    Cabecalho cab;
-    lerCabecalho(&cab, arqBin);
-
-    int RRN;
-    scanf("%d", &RRN);
-
-    Registro reg;
-
-    fseek(arqBin, (RRN)*TAM_REG, SEEK_CUR);
-
-    lerRegistro(&reg, arqBin);
-
-    if(RRN > cab.nroPares){
-        printf("Registro inexistente.");
-        fclose(arqBin);
-        return;
-    }
-
-    if(reg.removido == '0'){
-        imprimirRegistro(reg);
+    printf("%d %d ", reg.idPoPs, reg.idPoPsConectado); //Não podem ser nulos
+    if(reg.velocidade == -1){
+        printf("NULO ");
     }else{
-        printf("Registro inexistente.");
+        printf("%d ", reg.velocidade);
     }
+    if(reg.unidadeMedida == '$'){
+        printf("NULO\n");
+    }else{
+        printf("\"%c\"\n", reg.unidadeMedida);
+        }
 
-    fclose(arqBin);
+    //}
 }
 
-//DELETE
-void FUNC5(char *NomeArquivoBin)
+void excluirRegistro(Registro *reg, Cabecalho *cab, FILE* arqBin)
 {
-    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
+        //printf("Registro que vai ser removido: ");
+        //imprimirRegistro(*reg);
+    //altero valores do cabecalho
+    cab->status = '0';
+    int preTopoPilha = cab->topoPilha;
+    cab->topoPilha = reg->RRN;
+    cab->nroRegRem += 1;
+    cab->nroPares -= 1;
 
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    buscaRegistro(arqBin, 5);
-
-    fclose(arqBin);
-}
-
-//INSERT
-void FUNC6(char *NomeArquivoBin)
-{
-    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    Cabecalho cab;
+    //volta pro começo do arquivo
     fseek(arqBin, 0, SEEK_SET);
-    lerCabecalho(&cab, arqBin);
 
-    Registro reg;
+    escreverCabecalho(cab, arqBin);
 
-    int n;
-    scanf("%d", &n);
-    for(int i=0; i<n; i++)
-    {
-        //vejo o topoPilha
-        //se não há removidos
-        if (cab.topoPilha == -1)
-        {
-            fseek(arqBin, (TAM_REG * cab.proxRRN), SEEK_CUR);
-            cab.proxRRN++;
-        }
-        else //se houver
-        {
-            fseek(arqBin, (TAM_REG * cab.topoPilha), SEEK_CUR);
-            lerRegistro(&reg, arqBin);
-            cab.nroRegRem--;
-            cab.topoPilha = reg.encadeamentoPilha;
+    // [removido] [encadeamentoPilha] [idPoP](int) [idPoPsConectado](int) [velocidade](int) [unidadeMedida](char)
+    
+    //atributos de controle com valor
+    reg->removido = '1';
+    reg->encadeamentoPilha = preTopoPilha; //eu podia colocar um if mas fica -1 anyway se for o 1º
+    
+    //resto com lixo
+    // memset(&reg->idPoPs, '$', sizeof(int));
+    // memset(&reg->idPoPsConectado, '$', sizeof(int));
+    // memset(&reg->velocidade, '$', sizeof(int));
+    // reg->unidadeMedida = '$';
+    
+    //vou até o registro q está sendo excluido
+    fseek(arqBin, (reg->RRN * TAM_REG), SEEK_CUR);
 
-            voltaUmRegistro(arqBin);
-        }
+    escreverRegistro(reg, arqBin); 
 
-///////////////////// pegando valores de entrada
-        char entrada[30];
-        //valores do registrador a ser adicionado
-        reg.removido = '0';
-        reg.encadeamentoPilha = -1;
-        scanf("%d", &reg.idPoPs);
-        scanf("%d", &reg.idPoPsConectado);
+    fseek(arqBin, 0, SEEK_SET);
+    cab->status = '1';
 
-        // scanf("%d", reg->velocidade);
-        scanf("%s", entrada);
-        if (strcmp(entrada, "NULO") == 0)
-            reg.velocidade = -1;
-        else
-            reg.velocidade = atoi(entrada);
+    // fwrite(cab->status, sizeof(char), 1, arqBin);
+    // fseek(arqBin, (((reg->RRN + 1) * TAM_REG)-1), SEEK_CUR);
 
-        // scanf("%c", reg->unidadeMedida);
-        ScanQuoteString(entrada);
-        if(!entrada[0]) // se não houver o primeiro char
-            reg.unidadeMedida = '$';
-        else
-            reg.unidadeMedida = entrada[0];
-/////////////////////
-            printf("Registro adicionado: (de RRN = %d)", reg.RRN);
-            imprimirRegistro(reg);
-        escreverRegistro(&reg, arqBin);
-
-        fseek(arqBin, 0, SEEK_SET);
-        cab.nroPares++;
-        escreverCabecalho(&cab, arqBin);
-    }
-
-    fclose(arqBin);
+    //da dó de reescrever o cabecalho inteiro só pelo status, daria pra usar o código comentado acima como alternativa
+    escreverCabecalho(cab, arqBin); 
+    fseek(arqBin, ((reg->RRN + 1) * TAM_REG), SEEK_CUR);
+    
+    //termina onde estava no acaoBusca
+    
+    return;
 }
 
-//UPDATE
-void FUNC7(char *NomeArquivoBin)
-{
-    FILE *arqBin = fopen(NomeArquivoBin, "rb+");
-
-    if(arqBin == NULL){
-        printf("Falha no processamento do arquivo.");
-        return;
-    }
-
-    buscaRegistro(arqBin, 7);
-
-    fclose(arqBin);
+void atualizarRegistro(Registro *reg, FILE *arqBin){
+    voltaUmRegistro(arqBin);
+    //printf("\nRegistro atualizado: \n");
+    //imprimirRegistro(*reg);
+    escreverRegistro(reg, arqBin);
 }
+
+
